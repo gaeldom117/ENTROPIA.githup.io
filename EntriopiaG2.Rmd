@@ -1,0 +1,236 @@
+---
+title: "Estadística"
+subtitle: "Aplicaciones de los momentos: entropía diferencial 2"
+author: "Gael Domingo Gonzalez Pizaña"
+
+date: "13/11/2023"
+output:
+  rmdformats::material:
+    highlight: kate
+    cards: false
+---
+
+
+```{r knitr_init, echo=FALSE, message=FALSE, warning=FALSE}
+library(highcharter)
+```
+
+
+
+# Entropía diferencial
+
+Sea $f(x)$ la densidad de probabilidad de un experimento aleatorio $\mathbb{E}$. Recordemos que la entropía de la función $f(x)$ (llamada entropía diferencial) está dada por la siguiente expresión:
+$$
+h(X) = -\int_{-\infty}^{+\infty}{f(x)\log(f(x))}.
+$$
+
+La entropía diferencial es pues, la entropía de Shannon para distribuciones que corresponden a variables aleatorias continuas, por ejemplo para la variable aleatoria uniforme, como se vió en la tarea pasada, la entropía tiene la siguiente relación densidad-entropía:
+$$
+h(f(x)=\frac{1}{b-a}) = \ln(b-a)
+$$
+
+y por lo tanto se puede notar que para el caso de la distribución uniforme al incrementar la varianza (cuando $a$ incrementa), se incrementa la entropía. La siguiente figura muestra lo anterior.
+
+```{r eval=TRUE}
+a          <- 0
+b          <- seq(2,8, length=20)               # Variamos b
+entropy    <- log(b-a) 
+hc <- highchart() %>% 
+  hc_add_series(cbind(b,entropy), name="UniformRV_entropy") %>%   hc_add_theme(hc_theme_smpl()) %>% 
+  hc_title(text="Variacion de la entropia con la Varianza") %>%   hc_subtitle(text="Teoria de la informacion") %>%
+  hc_xAxis(title=list(text="Valores de b")) %>%          hc_yAxis(title=list(text="Entropia de la funcion"))
+hc
+
+```
+
+## Ejercicios
+
+Investigar la relación varianza-entropia para las siguientes variables aleatorias continuas:
+
+- Rayleigh
+ $Var(X) = \frac{4-\pi}{2}\sigma^2$, $H(X) = 1 + \ln(\sigma\sqrt{2\pi e})$
+
+- Normal
+
+$Var(X) = \sigma^2$, $H(X) = \frac{1}{2}\ln(2\pi e\sigma^2)$ 
+
+- Exponencial
+$Var(X) = \sigma^2$, $H(X) = 1 - \ln(\sigma)$ 
+
+- Cauchy
+La distribución de Cauchy no tiene una entropía definida en términos de funciones elementales
+
+- Laplace
+
+$Var(X) = 2\sigma^2$, $H(X) = 1 + \ln(\sigma\sqrt{2})$ 
+
+- Logística
+ $Var(X) = \frac{\pi^2}{3}\sigma^2$, $H(X) = \ln(\sigma\sqrt{\frac{3}{\pi}}) + 2$ 
+ 
+- Triangular
+ $Var(X) = \frac{a^2+b^2+c^2-ab-ac-bc}{18}$, $H(X) = -\frac{1}{2}\ln(\frac{4}{3}(b-a)(c-b)(c-a))$
+
+Para la variable aleatoria triangular, ?Existe una relación entre su moda y su entropía?
+
+Nota: Para responder adecuadamente los anteriores cuestionamientos es necesario investigar las entropías de las variables aleatorias así como los valores de sus varianzas. De igual forma es necesario conocer el funcionamiento del paquete de `R` llamado `highcharter`.
+
+
+# Entropía de Shannon discreta
+
+La entropía mide el grado de complejidad de una variable aleatoria descrita por medio de su PDF o bién mediante su PMF. Para el caso discreto, la ecuación entrópica de Shannon está dada por:
+$$
+H(p) = -\sum_{k}{p_k \log(p_k)}
+$$
+
+Para la variable aleatoria Binomial, la PMF está dada por:
+$$
+\mbox{Pr}\{X=k\} = {n\choose k} p^k(1-p)^{n-k}
+$$
+y por lo tanto, la relación entre la entropía y la probabilidad $p$ está dada empíricamente como:
+
+```{r eval=TRUE}
+n          <- 20
+x          <- 0:20
+p          <- seq(0,1, length=20)
+entropies  <- numeric(20)
+for(i in 1:length(p))
+{
+  densities     <- dbinom(x,n,p[i])
+  entropies[i]  <- -1*sum(densities*log(densities))
+  
+}
+theoretical <- 0.5*log(2*pi*n*exp(1)*p*(1-p))
+hc <- highchart() %>% 
+  hc_add_series(cbind(p,entropies), name="BinomialRV_empirical") %>%  hc_add_series(cbind(p,theoretical), name="BinomialRV_theoretical") %>%  hc_add_theme(hc_theme_smpl()) %>% 
+  hc_title(text="Variacion de la entropia contra p") %>%   hc_subtitle(text="Teoria de la informacion") %>%
+  hc_xAxis(title=list(text="Valores de probabilidad p")) %>%          hc_yAxis(title=list(text="Entropia de la funcion"))
+hc
+
+```
+
+## Ejercicios
+
+Replicar el mismo procedimiento anterior para las siguientes variables aleatorias discretas:
+
+- Binomial negativa.
+```{r}
+n <- 20
+k <- 5
+p <- seq(0, 1, length = 20)
+entropies <- numeric(20)
+
+for (i in 1:length(p)) {
+  densities <- dnbinom(k + n - 1, k, p[i]) # Función de densidad de probabilidad de la distribución binomial negativa
+  entropies[i] <- -1 * sum(densities * log(densities))
+}
+
+theoretical <- 0.5 * log(2 * pi * (k + n - 1) * exp(1) * p * (1 - p))
+
+hc <- highchart() %>% 
+  hc_add_series(cbind(p, entropies), name = "Binomial Negativa Empírica") %>%  
+  hc_add_series(cbind(p, theoretical), name = "Binomial Negativa Teórica") %>%  
+  hc_add_theme(hc_theme_smpl())%>% 
+  hc_title(text = "Variación de la Entropía contra p") %>%   
+  hc_subtitle(text = "Teoría de la Información") %>%
+  hc_xAxis(title = list(text = "Valores de probabilidad p")) %>%          
+  hc_yAxis(title = list(text = "Entropía de la función"))
+
+hc
+```
+
+- Geométrica.
+```{r}
+
+
+n <- 20
+k <- 1:20
+p <- seq(0, 1, length = 20)
+entropies <- numeric(20)
+
+for (i in 1:length(p)) {
+  probabilities <- (1 - p[i])^(k - 1) * p[i]
+  entropies[i] <- -sum(probabilities * log(probabilities), na.rm = TRUE)
+}
+
+theoretical <- -p * log(p) - (1 - p) * log(1 - p)
+
+hc <- highchart() %>%
+  hc_add_series(cbind(p, entropies), name = "GeometricRV_empirical") %>%
+  hc_add_series(cbind(p, theoretical), name = "GeometricRV_theoretical") %>%
+  hc_add_theme(hc_theme_smpl()) %>%
+  hc_title(text = "Variacion de la entropia contra p") %>%
+  hc_subtitle(text = "Teoria de la informacion") %>%
+  hc_xAxis(title = list(text = "Valores de probabilidad p")) %>%
+  hc_yAxis(title = list(text = "Entropia de la funcion"))
+
+hc
+
+```
+
+- Poisson.
+```{r}
+library(highcharter)
+
+lambda <- 5  # Parámetro lambda para la distribución de Poisson
+x <- 0:20
+p <- seq(0, 1, length = 20)
+
+# Cálculo de entropías empíricas
+entropies <- numeric(20)
+for (i in 1:length(p)) {
+  densities <- dpois(x, lambda * p[i])
+  entropies[i] <- -1 * sum(densities * log(densities))
+}
+
+# Cálculo teórico de entropías
+theoretical <- 0.5 * log(2 * pi * exp(1) * lambda * p * (1 - p))
+
+# Visualización con Highcharts
+hc <- highchart() %>%
+  hc_add_series(cbind(p, entropies), name = "PoissonRV_empirical") %>%
+  hc_add_series(cbind(p, theoretical), name = "PoissonRV_theoretical") %>%
+  hc_add_theme(hc_theme_smpl()) %>%
+  hc_title(text = "Variacion de la entropia contra p - Distribución de Poisson") %>%
+  hc_subtitle(text = "Teoria de la informacion") %>%
+  hc_xAxis(title = list(text = "Valores de probabilidad p")) %>%
+  hc_yAxis(title = list(text = "Entropia de la funcion"))
+
+hc
+
+```
+
+
+- Hipergeométrica.
+```{r}
+
+
+N <- 50  # Número total de elementos
+K <- 20  # Número total de elementos de la clase de interés
+n <- 10  # Tamaño de la muestra
+x <- 0:10
+p <- seq(0, 1, length = 20)
+
+# Cálculo de entropías empíricas
+entropies <- numeric(20)
+for (i in 1:length(p)) {
+  densities <- dhyper(x, K, N - K, n * p[i])
+  entropies[i] <- -1 * sum(densities * log(densities))
+}
+
+# Cálculo teórico de entropías
+theoretical <- 0.5 * log(2 * pi * exp(1) * n * p * (1 - p))
+
+# Visualización con Highcharts
+hc <- highchart() %>%
+  hc_add_series(cbind(p, entropies), name = "HypergeometricRV_empirical") %>%
+  hc_add_series(cbind(p, theoretical), name = "HypergeometricRV_theoretical") %>%
+  hc_add_theme(hc_theme_smpl()) %>%
+  hc_title(text = "Variacion de la entropia contra p - Distribución Hipergeométrica") %>%
+  hc_subtitle(text = "Teoria de la informacion") %>%
+  hc_xAxis(title = list(text = "Valores de probabilidad p")) %>%
+  hc_yAxis(title = list(text = "Entropia de la funcion"))
+
+hc
+
+```
+
